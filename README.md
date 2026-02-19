@@ -1,8 +1,18 @@
 # 🧠 Python Code Autocomplete LLM (From Scratch)
 
-A **GPT-style Transformer language model** trained **entirely from scratch** to perform **Python code autocompletion**, using **real open‑source GitHub repositories** and **no external LLM APIs**.
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-Deep%20Learning-red)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Status](https://img.shields.io/badge/Status-Active-success)
+![Platform](https://img.shields.io/badge/Platform-CPU--Only-lightgrey)
+![GitHub stars](https://img.shields.io/github/stars/CODExGAMERZ/Code-AutoComplete-LLM?style=social)
+![GitHub forks](https://img.shields.io/github/forks/CODExGAMERZ/Code-AutoComplete-LLM?style=social)
+![GitHub issues](https://img.shields.io/github/issues/CODExGAMERZ/Code-AutoComplete-LLM)
+![GitHub last commit](https://img.shields.io/github/last-commit/CODExGAMERZ/Code-AutoComplete-LLM)
 
-This project demonstrates a full, practical LLM pipeline — from data collection to inference — built to run on a **CPU-only consumer laptop**.
+A **GPT-style Transformer language model** trained **entirely from scratch** to perform **Python code autocompletion**, using **real open-source GitHub repositories** and **no external LLM APIs**.
+
+This project demonstrates a **full end-to-end LLM pipeline** — data collection, tokenization, model training, and inference — designed to run on a **CPU-only consumer laptop**.
 
 ---
 
@@ -15,8 +25,19 @@ This project demonstrates a full, practical LLM pipeline — from data collectio
   * Flask
   * Requests
   * FastAPI
-* Fully **local & offline** (privacy‑preserving)
-* End‑to‑end training, inference, and autocomplete
+* Fully **local & offline** (privacy-preserving)
+* End-to-end **training, inference, and autocomplete**
+* Clean, reproducible project structure
+
+---
+
+## 🧩 How It Works
+
+1. **Data Collection** – Open-source Python repositories are cloned into `data/raw/`
+2. **Preprocessing** – All `.py` files are merged into a single training corpus
+3. **Tokenization** – A custom BPE tokenizer learns Python-specific tokens
+4. **Model Training** – A GPT-style Transformer is trained with causal masking
+5. **Inference** – The model predicts the next tokens to autocomplete code
 
 ---
 
@@ -77,7 +98,7 @@ AutoComplete-LLm/
 
 ## 📚 Dataset
 
-The model is trained on **real Python source code** collected from open‑source GitHub repositories.
+The model is trained on **real Python source code** collected from open-source GitHub repositories.
 
 Data pipeline:
 
@@ -89,25 +110,19 @@ All code is used **locally for educational and research purposes only**.
 
 ---
 
-## 🏋️ Training
-
-Run the following commands from the project root:
+## ⚙️ Quick Start
 
 ```bash
+pip install -r requirements.txt
 python utils/train_from_raw.py
 python tokenizer/train_tokenizer.py
 python training/train.py
+python inference/generate.py
 ```
-
-Training is CPU‑only and completes in a few hours depending on dataset size.
 
 ---
 
 ## ✨ Inference (Autocomplete)
-
-```bash
-python inference/generate.py
-```
 
 Example:
 
@@ -130,21 +145,21 @@ while left <= right:
 
 ## 🎯 What This Project Demonstrates
 
-* Understanding of Transformer internals
+* Deep understanding of Transformer internals
 * Tokenization & sequence modeling
 * Training language models from scratch
-* Code‑specific language modeling
-* Practical ML engineering & debugging
+* Code-specific language modeling
+* Practical ML engineering and debugging
 
 ---
 
 ## 📌 Future Improvements
 
-* Top‑k & temperature sampling
-* Indentation‑aware decoding
+* Top-k & temperature sampling
+* Indentation-aware decoding
 * VS Code autocomplete extension
-* LoRA fine‑tuning
-* Byte‑level tokenization
+* LoRA fine-tuning
+* Byte-level tokenization
 
 ---
 
