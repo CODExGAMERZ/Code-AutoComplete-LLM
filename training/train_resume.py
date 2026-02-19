@@ -13,10 +13,14 @@ DEVICE = "cpu"
 VOCAB_SIZE = 8000
 BLOCK_SIZE = 256
 BATCH_SIZE = 4
-EPOCHS = 3
+EPOCHS = 10          # You can raise this if you want a longer run
 LEARNING_RATE = 3e-4
 NUM_WORKERS = 0
-CHECKPOINT_PATH = "model/checkpoints/ckpt_e0_s5000.pth"
+
+# Checkpoint settings
+START_CHECKPOINT_PATH = "model/checkpoints/ckpt_e0_s5000.pth"
+CHECKPOINT_DIR = "model/checkpoints"
+CHECKPOINT_EVERY = 50000  # Save every 50,000 steps
 
 def load_checkpoint(path, model, optimizer):
     ckpt = torch.load(path, map_location=DEVICE)
@@ -25,15 +29,21 @@ def load_checkpoint(path, model, optimizer):
     return ckpt["epoch"], ckpt["step"]
 
 def save_checkpoint(model, optimizer, epoch, step):
-    os.makedirs("model/checkpoints", exist_ok=True)
-    path = f"model/checkpoints/ckpt_resume_e{epoch}_s{step}.pth"
-    torch.save({
-        "epoch": epoch,
-        "step": step,
-        "model_state": model.state_dict(),
-        "optimizer_state": optimizer.state_dict()
-    }, path)
-    print(f"💾 Saved resume checkpoint: {path}")
+    os.makedirs(CHECKPOINT_DIR, exist_ok=True)
+    path = os.path.join(
+        CHECKPOINT_DIR,
+        f"ckpt_resume_e{epoch}_s{step}.pth"
+    )
+    torch.save(
+        {
+            "epoch": epoch,
+            "step": step,
+            "model_state": model.state_dict(),
+            "optimizer_state": optimizer.state_dict()
+        },
+        path
+    )
+    print(f"💾 Saved checkpoint: {path}")
 
 def main():
     dataset = CodeDataset(
@@ -60,9 +70,14 @@ def main():
     optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
     loss_fn = torch.nn.CrossEntropyLoss()
 
-    start_epoch, start_step = 0, 0
-    if os.path.exists(CHECKPOINT_PATH):
-        start_epoch, start_step = load_checkpoint(CHECKPOINT_PATH, model, optimizer)
+    start_epoch = 0
+    start_step = 0
+
+    # Load existing checkpoint if available
+    if os.path.exists(START_CHECKPOINT_PATH):
+        start_epoch, start_step = load_checkpoint(
+            START_CHECKPOINT_PATH, model, optimizer
+        )
         print(f"🔄 Resuming from epoch {start_epoch}, step {start_step}")
 
     global_step = start_step
@@ -70,7 +85,7 @@ def main():
     for epoch in range(start_epoch, EPOCHS):
         total_loss = 0.0
 
-        for step, (x, y) in enumerate(loader, start=start_step):
+        for step, (x, y) in enumerate(loader, start=0):
             x, y = x.to(DEVICE), y.to(DEVICE)
 
             logits = model(x)
@@ -81,20 +96,27 @@ def main():
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
 
-            total_loss += loss.item()
             global_step += 1
+            total_loss += loss.item()
 
-            if global_step % 5000 == 0:
+            if global_step % 10 == 0:
+                print(
+                    f"Epoch {epoch+1} Step {global_step} "
+                    f"Loss {loss.item():.4f}"
+                )
+
+            # Save checkpoint every 50,000 steps
+            if global_step % CHECKPOINT_EVERY == 0:
                 save_checkpoint(model, optimizer, epoch, global_step)
 
-            if step % 10 == 0:
-                print(f"Epoch {epoch+1} Step {global_step} Loss {loss.item():.4f}")
-
         avg_loss = total_loss / len(loader)
-        print(f"Epoch {epoch+1} Avg Loss {avg_loss:.4f}")
+        print(f"📊 Epoch {epoch+1} complete | Avg Loss {avg_loss:.4f}")
 
-    torch.save(model.state_dict(), "model/model_60M_final_resumed.pth")
-    print("🎉 Finished full resumed training")
+    # Final save after training
+    final_path = os.path.join("model", "model_60M_final_resumed.pth")
+    torch.save(model.state_dict(), final_path)
+    print(f"🎉 Training complete — final model saved at {final_path}")
+
 
 if __name__ == "__main__":
     main()
