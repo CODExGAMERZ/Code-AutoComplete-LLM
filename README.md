@@ -18,6 +18,7 @@ This project demonstrates a **full end-to-end LLM pipeline** — data collection
 
 ## 🚀 Features
 
+**~60M parameter GPT-style Transformer** trained from scratch
 * Decoder-only **GPT architecture** (causal language model)
 * Custom **BPE tokenizer** trained on Python source code
 * Fine-tuned on real GitHub repositories:
@@ -86,11 +87,11 @@ AutoComplete-LLm/
 | Component       | Value                          |
 | --------------- | ------------------------------ |
 | Architecture    | GPT (Decoder-only Transformer) |
-| Layers          | 6                              |
+| Layers          | 8                              |
 | Attention Heads | 8                              |
 | Embedding Size  | 512                            |
 | Context Length  | 256 tokens                     |
-| Parameters      | ~45M                           |
+| Parameters      | ~60M                           |
 | Optimizer       | AdamW                          |
 | Loss Function   | Cross-Entropy                  |
 
