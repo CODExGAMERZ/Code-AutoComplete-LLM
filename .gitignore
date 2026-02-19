@@ -1,19 +1,34 @@
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
+# Virtual environments
 .env
 .venv
 venv/
 
+# Model weights & checkpoints
 model/model.pth
+model/model_60M.pth
+model/model_60M_final.pth
+model/model_60M_final_resumed.pth
+
+# All checkpoint files
+model/checkpoints/
+*.pth
+
+# Tokenizer
 tokenizer/tokenizer.json
 
+# Dataset
 data/raw/
 data/processed/train.txt
 
+# Jupyter
 .ipynb_checkpoints/
 
+# System files
 .DS_Store
 Thumbs.db
