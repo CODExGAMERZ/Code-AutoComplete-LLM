@@ -13,13 +13,21 @@ VOCAB_SIZE = 8000
 BLOCK_SIZE = 256
 
 tokenizer = Tokenizer.from_file("tokenizer/tokenizer.json")
-model = GPT(VOCAB_SIZE, BLOCK_SIZE)
-model.load_state_dict(torch.load("model/model.pth", map_location=DEVICE))
+
+model = GPT(
+    vocab_size=VOCAB_SIZE,
+    block_size=BLOCK_SIZE,
+    n_layers=8,
+    n_heads=8,
+    n_embd=512
+)
+
+model.load_state_dict(torch.load("model/model_60M.pth", map_location=DEVICE))
 model.eval()
 
 def autocomplete(prompt, max_tokens=50):
     ids = tokenizer.encode(prompt).ids
-    x = torch.tensor(ids, dtype=torch.long).unsqueeze(0)
+    x = torch.tensor(ids).unsqueeze(0)
 
     for _ in range(max_tokens):
         with torch.no_grad():
@@ -29,4 +37,4 @@ def autocomplete(prompt, max_tokens=50):
 
     return tokenizer.decode(x[0].tolist())
 
-print(autocomplete("def binary_search(arr, target):"))
+print(autocomplete("def merge_sort(arr):"))

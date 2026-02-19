@@ -24,9 +24,6 @@ def main():
         block_size=BLOCK_SIZE
     )
 
-    if len(dataset) == 0:
-        raise ValueError("Dataset too small")
-
     loader = DataLoader(
         dataset,
         batch_size=BATCH_SIZE,
@@ -34,7 +31,14 @@ def main():
         num_workers=NUM_WORKERS
     )
 
-    model = GPT(VOCAB_SIZE, BLOCK_SIZE).to(DEVICE)
+    model = GPT(
+        vocab_size=VOCAB_SIZE,
+        block_size=BLOCK_SIZE,
+        n_layers=8,
+        n_heads=8,
+        n_embd=512
+    ).to(DEVICE)
+
     optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
     loss_fn = torch.nn.CrossEntropyLoss()
 
@@ -43,8 +47,7 @@ def main():
         total_loss = 0.0
 
         for step, (x, y) in enumerate(loader):
-            x = x.to(DEVICE)
-            y = y.to(DEVICE)
+            x, y = x.to(DEVICE), y.to(DEVICE)
 
             logits = model(x)
             loss = loss_fn(
@@ -64,9 +67,7 @@ def main():
 
         print(f"Epoch {epoch+1} Avg Loss {(total_loss / len(loader)):.4f}")
 
-    os.makedirs("model", exist_ok=True)
-    torch.save(model.state_dict(), "model/model.pth")
+    torch.save(model.state_dict(), "model/model_60M.pth")
 
 if __name__ == "__main__":
     main()
-    print("Done")
