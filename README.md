@@ -1,44 +1,46 @@
 # 🧠 Python Code Autocomplete LLM (From Scratch)
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-![PyTorch](https://img.shields.io/badge/PyTorch-Deep%20Learning-red)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Status](https://img.shields.io/badge/Status-Active-success)
-![Platform](https://img.shields.io/badge/Platform-CPU--Only-lightgrey)
-![GitHub stars](https://img.shields.io/github/stars/CODExGAMERZ/Code-AutoComplete-LLM?style=social)
-![GitHub forks](https://img.shields.io/github/forks/CODExGAMERZ/Code-AutoComplete-LLM?style=social)
-![GitHub issues](https://img.shields.io/github/issues/CODExGAMERZ/Code-AutoComplete-LLM)
-![GitHub last commit](https://img.shields.io/github/last-commit/CODExGAMERZ/Code-AutoComplete-LLM)
+A **GPT-style Transformer language model** trained **entirely from scratch** to perform **Python code autocompletion**.
+The project covers the **full LLM lifecycle**: data collection, tokenization, pretraining, algorithm fine-tuning, inference, and quantitative analysis.
 
-A **GPT-style Transformer language model** trained **entirely from scratch** to perform **Python code autocompletion**, using **real open-source GitHub repositories** and **no external LLM APIs**.
-
-This project demonstrates a **full end-to-end LLM pipeline** — data collection, tokenization, model training, and inference — designed to run on a **CPU-only consumer laptop**.
+This model was trained **locally on CPU**, without using external LLM APIs.
 
 ---
 
-## 🚀 Features
+## 🚀 Key Features
 
-**~60M parameter GPT-style Transformer** trained from scratch
-* Decoder-only **GPT architecture** (causal language model)
+* ~**60M parameter** decoder-only Transformer (GPT-style)
 * Custom **BPE tokenizer** trained on Python source code
-* Fine-tuned on real GitHub repositories:
-
-  * Flask
-  * Requests
-  * FastAPI
-* Fully **local & offline** (privacy-preserving)
-* End-to-end **training, inference, and autocomplete**
-* Clean, reproducible project structure
+* Pretrained on **real GitHub repositories**
+* Fine-tuned for **algorithmic reasoning**
+* End-to-end **training, inference, and evaluation** pipeline
+* **Entropy & loss analysis** with matplotlib + Desmos
+* Fully **offline & reproducible**
 
 ---
 
-## 🧩 How It Works
+## 🧩 How the System Works
 
-1. **Data Collection** – Open-source Python repositories are cloned into `data/raw/`
-2. **Preprocessing** – All `.py` files are merged into a single training corpus
-3. **Tokenization** – A custom BPE tokenizer learns Python-specific tokens
-4. **Model Training** – A GPT-style Transformer is trained with causal masking
-5. **Inference** – The model predicts the next tokens to autocomplete code
+1. **Data Collection**
+   Open-source Python repositories are cloned into `data/raw/`
+
+2. **Preprocessing**
+   `.py` files are merged into a single training corpus
+
+3. **Tokenization**
+   A Byte Pair Encoding (BPE) tokenizer learns Python-specific tokens
+
+4. **Pretraining**
+   GPT-style Transformer trained with causal language modeling
+
+5. **Algorithm Fine-Tuning**
+   Model is adapted to generate classic algorithms (search, DP, sorting)
+
+6. **Evaluation & Analysis**
+   Loss curves, entropy metrics, and single-step confidence analysis
+
+7. **Inference**
+   Model performs next-token code autocompletion
 
 ---
 
@@ -46,17 +48,26 @@ This project demonstrates a **full end-to-end LLM pipeline** — data collection
 
 ```
 AutoComplete-LLm/
+├── analysis/
+│   ├── entropy_single_step.py
+│   ├── plot_loss.py
+│   ├── loss_history.json
+│   └── loss_curve.png
 │
 ├── data/
-│   ├── raw/                 # GitHub Python repositories
-│   │   ├── flask/
-│   │   ├── requests/
-│   │   └── fastapi/
-│   └── processed/
-│       └── train.txt        # Merged training corpus
+│   ├── algorithms/
+│   │   └── algorithms.txt
+│   ├── processed/
+│   │   ├── train.txt
+│   │   └── train_finetune.txt
+│   └── raw/
+│       └── fastapi/
 │
 ├── model/
-│   └── ai.py                # GPT model implementation
+│   ├── ai.py
+│   └── checkpoints/
+│       ├── ckpt_e0_s50000.pth
+│       └── ckpt_algo_ft_s55000.pth
 │
 ├── tokenizer/
 │   ├── train_tokenizer.py
@@ -64,25 +75,26 @@ AutoComplete-LLm/
 │
 ├── training/
 │   ├── dataset.py
-│   └── train.py
+│   ├── train.py
+│   └── train_finetune.py
 │
 ├── inference/
-│   └── generate.py
+│   └── run_model.py
 │
 ├── utils/
-│   ├── train_from_raw.py    # Builds train.txt from raw repos
-│   ├── generate_big_train_txt.py
-│   ├── config.py
-│   └── helpers.py
+│   ├── build_finetune_corpus.py
+│   ├── train_from_raw.py
+│   └── generate_big_train_txt.py
 │
 ├── README.md
+├── LICENSE
 ├── requirements.txt
 └── .gitignore
 ```
 
 ---
 
-## 🧠 Model Details
+## 🧠 Model Configuration
 
 | Component       | Value                          |
 | --------------- | ------------------------------ |
@@ -90,56 +102,72 @@ AutoComplete-LLm/
 | Layers          | 8                              |
 | Attention Heads | 8                              |
 | Embedding Size  | 512                            |
-| Context Length  | 256 tokens                     |
+| Context Length  | 256                            |
 | Parameters      | ~60M                           |
 | Optimizer       | AdamW                          |
 | Loss Function   | Cross-Entropy                  |
 
 ---
 
-## 📚 Dataset
+## 🔬 Training Dynamics & Entropy Analysis
 
-The model is trained on **real Python source code** collected from open-source GitHub repositories.
+* Cross-entropy loss converges to **~0.25** during fine-tuning
+* Loss curve shows **stable saturation** (no divergence)
+* Single-step entropy analysis on algorithmic prompts:
 
-Data pipeline:
+  * Entropy ≈ **1.10**
+  * Effective next-token vocabulary ≈ **3**
 
-1. Clone repositories into `data/raw/`
-2. Merge and clean `.py` files into `data/processed/train.txt`
-3. Train tokenizer and model on the merged corpus
-
-All code is used **locally for educational and research purposes only**.
+This indicates **strong model confidence** during structured code generation.
 
 ---
 
-## ⚙️ Quick Start
+## ✨ Example Autocomplete
+
+**Prompt**
+
+```python
+def fibonacci(n):
+```
+
+**Model Output**
+
+```python
+a, b = 0, 1
+result = []
+for _ in range(n):
+    result.append(a)
+    a, b = b, a + b
+return result
+```
+
+---
+
+## ⚙️ Installation
 
 ```bash
 pip install -r requirements.txt
-python utils/train_from_raw.py
-python tokenizer/train_tokenizer.py
-python training/train.py
-python inference/generate.py
 ```
 
 ---
 
-## ✨ Inference (Autocomplete)
+## ▶️ Training
 
-Example:
-
-**Input**
-
-```python
-def binary_search(arr, target):
+```bash
+python utils/train_from_raw.py
+python tokenizer/train_tokenizer.py
+python training/train.py
+python training/train_finetune.py
 ```
 
-**Output**
+---
 
-```python
-left = 0
-right = len(arr) - 1
-while left <= right:
-    mid = (left + right) // 2
+## ▶️ Inference
+
+```bash
+python inference/run_model.py \
+  -c model/checkpoints/ckpt_algo_ft_s55000.pth \
+  -p "def fibonacci(n):"
 ```
 
 ---
@@ -147,20 +175,10 @@ while left <= right:
 ## 🎯 What This Project Demonstrates
 
 * Deep understanding of Transformer internals
-* Tokenization & sequence modeling
-* Training language models from scratch
-* Code-specific language modeling
-* Practical ML engineering and debugging
-
----
-
-## 📌 Future Improvements
-
-* Top-k & temperature sampling
-* Indentation-aware decoding
-* VS Code autocomplete extension
-* LoRA fine-tuning
-* Byte-level tokenization
+* Token-level language modeling
+* Fine-tuning for reasoning tasks
+* Entropy-based performance analysis
+* Practical ML engineering on limited hardware
 
 ---
 

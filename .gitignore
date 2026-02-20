@@ -1,34 +1,59 @@
-# Python cache
+# =========================
+# Python
+# =========================
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
+*.so
 
+# =========================
 # Virtual environments
-.env
-.venv
+# =========================
+env/
 venv/
+.venv/
+llm-analysis/
+conda-env/
 
-# Model weights & checkpoints
-model/model.pth
-model/model_60M.pth
-model/model_60M_final.pth
-model/model_60M_final_resumed.pth
-
-# All checkpoint files
-model/checkpoints/
-*.pth
-
-# Tokenizer
-tokenizer/tokenizer.json
-
-# Dataset
-data/raw/
-data/processed/train.txt
-
-# Jupyter
+# =========================
+# Jupyter / Notebooks
+# =========================
 .ipynb_checkpoints/
 
-# System files
+# =========================
+# Training & analysis artifacts
+# =========================
+analysis/
+data/
+
+# =========================
+# Model weights & checkpoints
+# =========================
+model/*.pth
+model/checkpoints/*.pth
+
+# =========================
+# Tokenizer temp/cache
+# =========================
+tokenizer/*.tmp
+tokenizer/*.cache
+
+# =========================
+# Logs & temp files
+# =========================
+*.log
+*.tmp
+*.bak
+
+# =========================
+# OS files
+# =========================
 .DS_Store
 Thumbs.db
+
+# =========================
+# IDEs / Editors
+# =========================
+.vscode/
+.idea/
