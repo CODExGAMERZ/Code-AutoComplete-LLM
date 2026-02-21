@@ -41,17 +41,26 @@ def main():
         n_embd=512,
     ).to(DEVICE)
 
+    optimizer = torch.optim.AdamW(model.parameters(), lr=LR)
+    loss_fn = torch.nn.CrossEntropyLoss()
+
+    start_epoch = 0
+    global_step = 0
+
     if os.path.exists(CHECKPOINT_PATH):
         ckpt = torch.load(CHECKPOINT_PATH, map_location=DEVICE)
         model.load_state_dict(ckpt["model_state"], strict=False)
-
-    optimizer = torch.optim.AdamW(model.parameters(), lr=LR)
-    loss_fn = torch.nn.CrossEntropyLoss()
+        if "optimizer_state" in ckpt:
+            optimizer.load_state_dict(ckpt["optimizer_state"])
+        if "epoch" in ckpt:
+            start_epoch = ckpt["epoch"]
+        if "step" in ckpt:
+            global_step = ckpt["step"]
 
     model.train()
 
     try:
-        for epoch in range(EPOCHS):
+        for epoch in range(start_epoch, EPOCHS):
             for step, (x, y) in enumerate(loader):
                 x = x.to(DEVICE)
                 y = y.to(DEVICE)
@@ -66,8 +75,10 @@ def main():
                 loss.backward()
                 optimizer.step()
 
-                if step % 100 == 0:
-                    print(f"Epoch {epoch} Step {step} Loss {loss.item():.4f}")
+                global_step += 1
+
+                if global_step % 100 == 0:
+                    print(f"Epoch {epoch} Step {global_step} Loss {loss.item():.4f}")
 
     except KeyboardInterrupt:
         print("Interrupted, saving checkpoint")
@@ -75,6 +86,9 @@ def main():
     torch.save(
         {
             "model_state": model.state_dict(),
+            "optimizer_state": optimizer.state_dict(),
+            "epoch": EPOCHS,
+            "step": global_step,
         },
         CHECKPOINT_PATH,
     )
