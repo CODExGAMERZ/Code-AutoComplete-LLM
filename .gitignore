@@ -26,12 +26,13 @@ conda-env/
 # =========================
 analysis/
 data/
+training_logs/
 
 # =========================
 # Model weights & checkpoints
 # =========================
 model/*.pth
-model/checkpoints/*.pth
+model/checkpoints/
 
 # =========================
 # Tokenizer temp/cache

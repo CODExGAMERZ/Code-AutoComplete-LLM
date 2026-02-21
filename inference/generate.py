@@ -1,40 +1,102 @@
-import sys
-import os
-
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.insert(0, ROOT_DIR)
-
 import torch
-from tokenizers import Tokenizer
-from model.ai import GPT
+import torch.nn.functional as F
 
-DEVICE = "cpu"
-VOCAB_SIZE = 8000
-BLOCK_SIZE = 256
+STOP_STRINGS = [
+    "\n\n\n",
+    "if __name__ ==",
+    "# End",
+    "\ndef ",
+    "\nclass ",
+]
 
-tokenizer = Tokenizer.from_file("tokenizer/tokenizer.json")
+def clean_python(code):
+    """Clean up generated Python code by removing incomplete statements."""
+    lines = code.split('\n')
+    cleaned = []
+    for line in lines:
+        if any(stop in line for stop in STOP_STRINGS):
+            break
+        cleaned.append(line)
+    return '\n'.join(cleaned)
 
-model = GPT(
-    vocab_size=VOCAB_SIZE,
-    block_size=BLOCK_SIZE,
-    n_layers=8,
-    n_heads=8,
-    n_embd=512
-)
+def apply_repetition_penalty(logits, generated_ids, penalty=1.1):
+    unique_tokens = set(generated_ids)
+    for token_id in unique_tokens:
+        logits[0, token_id] /= penalty
+    return logits
 
-model.load_state_dict(torch.load("model/model_60M.pth", map_location=DEVICE))
-model.eval()
+def top_k_filtering(logits, top_k=40):
+    if top_k <= 0:
+        return logits
+    values, indices = torch.topk(logits, top_k)
+    min_values = values[:, -1].unsqueeze(1)
+    logits[logits < min_values] = -float("Inf")
+    return logits
 
-def autocomplete(prompt, max_tokens=50):
+@torch.no_grad()
+def generate(
+    model,
+    tokenizer,
+    prompt,
+    max_tokens,
+    temperature,
+    top_k,
+    rep_penalty,
+    deterministic=False,
+):
+    model.eval()
+
     ids = tokenizer.encode(prompt).ids
-    x = torch.tensor(ids).unsqueeze(0)
+    x = torch.tensor(ids, dtype=torch.long).unsqueeze(0).to(DEVICE)
 
-    for _ in range(max_tokens):
-        with torch.no_grad():
+    is_class_context = "class " in prompt
+    is_method_context = "self" in prompt
+    is_dfs_context = "dfs" in prompt.lower()
+
+    with torch.no_grad():
+        for _ in range(max_tokens):
             logits = model(x)
-        next_token = torch.argmax(logits[0, -1])
-        x = torch.cat([x, next_token.view(1, 1)], dim=1)
+            logits = logits[:, -1, :]
 
-    return tokenizer.decode(x[0].tolist())
+            if deterministic:
+                temperature = 0.0
+                top_k = 1
 
-print(autocomplete("def merge_sort(arr):"))
+            if temperature > 0:
+                logits = logits / temperature
+
+            for token_id in set(x[0].tolist()):
+                logits[0, token_id] /= rep_penalty
+
+            decoded_so_far = tokenizer.decode(x[0].tolist())
+
+            if is_class_context and "a, b =" in decoded_so_far:
+                logits *= 0.95
+
+            if is_method_context:
+                temperature = min(temperature, 0.15)
+
+            if is_dfs_context:
+                temperature = min(temperature, 0.15)
+
+            if top_k > 0:
+                values, indices = torch.topk(logits, top_k)
+                mask = torch.full_like(logits, float("-inf"))
+                mask.scatter_(1, indices, values)
+                logits = mask
+
+            probs = torch.softmax(logits, dim=-1)
+
+            if deterministic:
+                next_id = torch.argmax(probs, dim=-1, keepdim=True)
+            else:
+                next_id = torch.multinomial(probs, 1)
+
+            x = torch.cat([x, next_id], dim=1)
+
+            decoded = tokenizer.decode(x[0].tolist())
+
+            if "\ndef " in decoded or "\nclass " in decoded:
+                break
+
+    return clean_python(tokenizer.decode(x[0].tolist()))
