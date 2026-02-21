@@ -1,46 +1,30 @@
 # 🧠 Python Code Autocomplete LLM (From Scratch)
 
-A **GPT-style Transformer language model** trained **entirely from scratch** to perform **Python code autocompletion**.
-The project covers the **full LLM lifecycle**: data collection, tokenization, pretraining, algorithm fine-tuning, inference, and quantitative analysis.
+A GPT-style Transformer trained entirely from scratch for Python code autocompletion.
 
-This model was trained **locally on CPU**, without using external LLM APIs.
+This project implements the full LLM lifecycle:
+
+* Data collection
+* Tokenizer training
+* Model pretraining
+* Efficient block-based training
+* Entropy & perplexity evaluation
+* CPU-only inference
+
+No external LLM APIs were used.
 
 ---
 
 ## 🚀 Key Features
 
-* ~**60M parameter** decoder-only Transformer (GPT-style)
-* Custom **BPE tokenizer** trained on Python source code
-* Pretrained on **real GitHub repositories**
-* Fine-tuned for **algorithmic reasoning**
-* End-to-end **training, inference, and evaluation** pipeline
-* **Entropy & loss analysis** with matplotlib + Desmos
-* Fully **offline & reproducible**
-
----
-
-## 🧩 How the System Works
-
-1. **Data Collection**
-   Open-source Python repositories are cloned into `data/raw/`
-
-2. **Preprocessing**
-   `.py` files are merged into a single training corpus
-
-3. **Tokenization**
-   A Byte Pair Encoding (BPE) tokenizer learns Python-specific tokens
-
-4. **Pretraining**
-   GPT-style Transformer trained with causal language modeling
-
-5. **Algorithm Fine-Tuning**
-   Model is adapted to generate classic algorithms (search, DP, sorting)
-
-6. **Evaluation & Analysis**
-   Loss curves, entropy metrics, and single-step confidence analysis
-
-7. **Inference**
-   Model performs next-token code autocompletion
+* ~33.5M parameter GPT-style decoder-only Transformer
+* Custom 8000-token BPE tokenizer trained on Python code
+* ~31M cleaned training tokens
+* CPU-only training (~8–9 hours per full run)
+* Unified training pipeline with checkpoint resume
+* Cross-entropy & perplexity evaluation tools
+* Loss curve visualization (matplotlib)
+* Fully offline and reproducible
 
 ---
 
@@ -48,26 +32,10 @@ This model was trained **locally on CPU**, without using external LLM APIs.
 
 ```
 AutoComplete-LLm/
-├── analysis/
-│   ├── entropy_single_step.py
-│   ├── plot_loss.py
-│   ├── loss_history.json
-│   └── loss_curve.png
-│
-├── data/
-│   ├── algorithms/
-│   │   └── algorithms.txt
-│   ├── processed/
-│   │   ├── train.txt
-│   │   └── train_finetune.txt
-│   └── raw/
-│       └── fastapi/
-│
+├── data/                # Ignored (raw + processed data)
 ├── model/
 │   ├── ai.py
-│   └── checkpoints/
-│       ├── ckpt_e0_s50000.pth
-│       └── ckpt_algo_ft_s55000.pth
+│   └── checkpoints/     # Ignored
 │
 ├── tokenizer/
 │   ├── train_tokenizer.py
@@ -75,19 +43,24 @@ AutoComplete-LLm/
 │
 ├── training/
 │   ├── dataset.py
-│   ├── train.py
-│   └── train_finetune.py
+│   └── train.py
 │
 ├── inference/
+│   ├── generate.py
+│   ├── postprocess.py
 │   └── run_model.py
 │
-├── utils/
-│   ├── build_finetune_corpus.py
-│   ├── train_from_raw.py
-│   └── generate_big_train_txt.py
+├── tools/
+│   ├── build_train_file.py
+│   ├── clean_repos.py
+│   ├── deduplicate.py
+│   ├── evaluate_model.py
+│   ├── inspect_dataset.py
+│   ├── model_stats.py
+│   └── plot_loss.py
 │
+├── MODEL_CARD.md
 ├── README.md
-├── LICENSE
 ├── requirements.txt
 └── .gitignore
 ```
@@ -103,22 +76,31 @@ AutoComplete-LLm/
 | Attention Heads | 8                              |
 | Embedding Size  | 512                            |
 | Context Length  | 256                            |
-| Parameters      | ~60M                           |
-| Optimizer       | AdamW                          |
-| Loss Function   | Cross-Entropy                  |
+| Vocabulary      | 8000 (Custom BPE)              |
+| Parameters      | 33,551,168                     |
 
 ---
 
-## 🔬 Training Dynamics & Entropy Analysis
+## 🔬 Training Dynamics
 
-* Cross-entropy loss converges to **~0.25** during fine-tuning
-* Loss curve shows **stable saturation** (no divergence)
-* Single-step entropy analysis on algorithmic prompts:
+The model is trained using causal language modeling with cross-entropy loss:
 
-  * Entropy ≈ **1.10**
-  * Effective next-token vocabulary ≈ **3**
+```
+Loss = -log(P_model(correct_token))
+```
 
-This indicates **strong model confidence** during structured code generation.
+Perplexity is computed as:
+
+```
+Perplexity = exp(loss)
+```
+
+Healthy training behavior observed:
+
+* Rapid entropy collapse in early steps
+* Smooth exponential decay
+* No divergence
+* Stable convergence
 
 ---
 
@@ -154,10 +136,26 @@ pip install -r requirements.txt
 ## ▶️ Training
 
 ```bash
-python utils/train_from_raw.py
 python tokenizer/train_tokenizer.py
 python training/train.py
-python training/train_finetune.py
+```
+
+Training automatically resumes from the latest checkpoint.
+
+---
+
+## ▶️ Evaluation
+
+Fast evaluation (~15 minutes):
+
+```bash
+python tools/evaluate_model.py
+```
+
+Plot loss curve:
+
+```bash
+python tools/plot_loss.py
 ```
 
 ---
@@ -166,7 +164,7 @@ python training/train_finetune.py
 
 ```bash
 python inference/run_model.py \
-  -c model/checkpoints/ckpt_algo_ft_s55000.pth \
+  -c model/checkpoints/latest_checkpoint.pth \
   -p "def fibonacci(n):"
 ```
 
@@ -174,11 +172,12 @@ python inference/run_model.py \
 
 ## 🎯 What This Project Demonstrates
 
-* Deep understanding of Transformer internals
-* Token-level language modeling
-* Fine-tuning for reasoning tasks
-* Entropy-based performance analysis
-* Practical ML engineering on limited hardware
+* Transformer internals implemented from scratch
+* Token-level autoregressive modeling
+* Efficient block-based training
+* CPU-only large model training
+* Practical ML engineering without GPUs
+* Entropy & perplexity analysis
 
 ---
 
