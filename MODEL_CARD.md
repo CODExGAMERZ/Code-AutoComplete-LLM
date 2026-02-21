@@ -47,4 +47,13 @@ AutoComplete-LLM v2 is a 60M parameter GPT-style transformer trained for Python 
 - Increase context to 512
 - Add structural fine-tuning dataset
 - Implement KV-cache inference
-- Quantization for faster CPU inference
+- Quantization for faster CPU inferenc
+
+## Reproducibility
+
+The training dataset is not included in this repository due to size.
+To reproduce training:
+1. Clone recommended Python repositories.
+2. Run cleaning pipeline.
+3. Build train.txt.
+4. Run training script.
