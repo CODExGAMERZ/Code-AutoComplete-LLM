@@ -1,29 +1,52 @@
 import os
 import shutil
 
-SOURCE_DIR = "data/raw"
-DEST_DIR = "data/expanded"
+RAW_DIR = "data/raw"
+CLEAN_DIR = "data/cleaned"
 
-IGNORE_FOLDERS = {
-    "venv", "__pycache__", "migrations",
-    "build", "dist", ".git", ".github",
-    "node_modules", "tests", "docs"
+REMOVE_DIRS = {
+    "tests",
+    "test",
+    "docs",
+    "doc",
+    ".github",
+    ".git",
+    "examples",
+    "scripts",
+    "ci",
+    "build",
+    "dist",
+    "__pycache__",
 }
 
-if not os.path.exists(DEST_DIR):
-    os.makedirs(DEST_DIR)
+def should_remove(path):
+    for r in REMOVE_DIRS:
+        if r in path.lower():
+            return True
+    return False
 
-for root, dirs, files in os.walk(SOURCE_DIR):
-    dirs[:] = [d for d in dirs if d not in IGNORE_FOLDERS]
+def clean_repo():
+    if os.path.exists(CLEAN_DIR):
+        shutil.rmtree(CLEAN_DIR)
+    os.makedirs(CLEAN_DIR, exist_ok=True)
 
-    for file in files:
-        if file.endswith(".py"):
+    for root, dirs, files in os.walk(RAW_DIR):
+        if should_remove(root):
+            continue
+
+        for file in files:
+            if not file.endswith(".py"):
+                continue
+
             src_path = os.path.join(root, file)
-            dst_path = os.path.join(DEST_DIR, file)
 
-            try:
-                shutil.copy2(src_path, dst_path)
-            except:
-                pass
+            rel_path = os.path.relpath(src_path, RAW_DIR)
+            dest_path = os.path.join(CLEAN_DIR, rel_path)
 
-print("Cleaning complete.")
+            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+            shutil.copy2(src_path, dest_path)
+
+    print("Cleaning complete.")
+
+if __name__ == "__main__":
+    clean_repo()

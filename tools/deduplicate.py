@@ -1,23 +1,28 @@
 import os
 import hashlib
 
-ROOT = "data/raw"
+CLEAN_DIR = "data/cleaned"
 
-hashes = {}
-removed = 0
+def file_hash(path):
+    with open(path, "rb") as f:
+        return hashlib.md5(f.read()).hexdigest()
 
-for root, _, files in os.walk(ROOT):
-    for file in files:
-        if file.endswith(".py"):
+def deduplicate():
+    hashes = set()
+    removed = 0
+
+    for root, _, files in os.walk(CLEAN_DIR):
+        for file in files:
             path = os.path.join(root, file)
-            with open(path, "rb") as f:
-                content = f.read()
-                h = hashlib.md5(content).hexdigest()
+            h = file_hash(path)
 
             if h in hashes:
                 os.remove(path)
                 removed += 1
             else:
-                hashes[h] = path
+                hashes.add(h)
 
-print(f"Removed {removed} duplicate files.")
+    print(f"Removed duplicates: {removed}")
+
+if __name__ == "__main__":
+    deduplicate()
