@@ -19,6 +19,10 @@ def clean_output(text: str) -> str:
     if "# =====" in text:
         text = text.split("# =====")[0]
 
+    text = re.sub(r"dfs_\d+\(", "dfs(", text)
+    text = re.sub(r"binary_search_\d+\(", "binary_search(", text)
+    text = re.sub(r"Stack_\d+", "Stack", text)
+
     lines = text.splitlines()
     cleaned = []
     for line in lines:
