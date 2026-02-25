@@ -1,186 +1,288 @@
 # 🧠 Python Code Autocomplete LLM (From Scratch)
 
-A GPT-style Transformer trained entirely from scratch for Python code autocompletion.
+A GPT-style **decoder-only Transformer** trained entirely from scratch for Python code autocompletion.
 
-This project implements the full LLM lifecycle:
+This project now uses a **true causal GPT decoder architecture with KV-cache support**, enabling faster incremental generation and more stable autoregressive behavior.
 
-* Data collection
-* Tokenizer training
-* Model pretraining
-* Efficient block-based training
-* Entropy & perplexity evaluation
-* CPU-only inference
-
-No external LLM APIs were used.
+The entire system was built and trained locally on CPU — no external LLM APIs.
 
 ---
 
-## 🚀 Key Features
+# 🚀 What’s New (Decoder Upgrade)
 
-* ~33.5M parameter GPT-style decoder-only Transformer
-* Custom 8000-token BPE tokenizer trained on Python code
-* ~31M cleaned training tokens
-* CPU-only training (~8–9 hours per full run)
-* Unified training pipeline with checkpoint resume
-* Cross-entropy & perplexity evaluation tools
-* Loss curve visualization (matplotlib)
-* Fully offline and reproducible
+✅ Replaced TransformerEncoder with true GPT-style decoder blocks
+✅ Implemented custom Causal Self-Attention
+✅ Added KV-cache for incremental decoding
+✅ Resume-safe training (Ctrl+C supported)
+✅ Dual inference modes (Autocomplete / Creative)
+✅ Cleaned & curated training dataset pipeline
+
+This is now a proper autoregressive language model architecture.
 
 ---
 
-## 📂 Project Structure
+# 🧩 System Overview
+
+## 1️⃣ Data Pipeline
+
+* Raw repositories collected
+* Hardened cleaning removes:
+
+  * tests
+  * build files
+  * compiled artifacts
+  * duplicate files
+* Curated alignment patterns added (balanced, non-repetitive)
+* Train / validation split
+
+## 2️⃣ Tokenizer
+
+* Custom BPE tokenizer (vocab size: 8000)
+* Trained on processed corpus
+* Python-aware tokenization
+
+## 3️⃣ Model Architecture
+
+Decoder-only GPT-style architecture:
+
+| Component       | Value                 |
+| --------------- | --------------------- |
+| Layers          | 8                     |
+| Attention Heads | 8                     |
+| Embedding Size  | 512                   |
+| Context Length  | 256                   |
+| Parameters      | ~33.5M                |
+| Attention       | Causal Self-Attention |
+| KV Cache        | ✅ Supported           |
+
+Total Parameters: ~33,551,168
+
+---
+
+# ⚡ KV-Cache Support
+
+Generation now uses incremental decoding:
+
+* First forward pass processes full prompt
+* Subsequent tokens reuse stored key/value tensors
+* No full-sequence recomputation
+
+Result:
+
+* Faster inference
+* Lower latency
+* True GPT-style decoding behavior
+
+---
+
+# 🎯 Training Setup
+
+* Optimizer: AdamW
+* Loss: Cross-Entropy
+* Gradient Accumulation Supported
+* Resume-safe checkpointing
+
+Training can be interrupted safely:
+
+```bash
+Ctrl+C
+```
+
+Restarting resumes automatically from the last checkpoint.
+
+---
+
+# 📊 Performance Benchmarks
+
+## Dataset
+
+* ~5.1M training tokens
+* ~0.5M validation tokens
+* Balanced curated alignment
+
+## Final Metrics (Decoder Architecture)
+
+| Metric                | Value |
+| --------------------- | ----- |
+| Epochs                | 2     |
+| Final Validation Loss | 2.84  |
+| Perplexity            | 17.20 |
+
+For a 33M parameter CPU-trained model, this is strong stability.
+
+---
+
+# ✨ Example Outputs
+
+## DFS
+
+Input:
+
+```python
+def dfs(graph, node, visited):
+```
+
+Output:
+
+```python
+stack = [start]
+while stack:
+    node = stack.pop()
+    if node not in visited:
+        visited.add(node)
+        stack.extend(graph.get(node, []))
+```
+
+---
+
+## Stack
+
+Input:
+
+```python
+class Stack:
+    def push(self, item):
+```
+
+Output:
+
+```python
+self._items.append(item)
+```
+
+---
+
+## Binary Search
+
+Input:
+
+```python
+def binary_search(arr, target):
+```
+
+Output:
+
+```python
+lo, hi = 0, len(arr)
+while lo < hi:
+    mid = (lo + hi) // 2
+    if arr[mid] == target:
+        return mid
+    if arr[mid] < target:
+        lo = mid + 1
+    else:
+        hi = mid
+return -1
+```
+
+---
+
+# 🧠 Inference Modes
+
+## Autocomplete Mode (default)
+
+* temperature = 0.2
+* top_k = 10
+* Deterministic
+* Code-focused
+
+## Creative Mode
+
+* temperature = 0.8
+* top_k = 50
+* More diverse
+* Useful for code generation
+
+Run with:
+
+```bash
+python inference/run_model.py \
+  -c model/checkpoints/latest_checkpoint.pth \
+  -p "def dfs(graph, node, visited):" \
+  --mode autocomplete
+```
+
+---
+
+# 🖥️ CLI Usage (Simple Wrapper)
+
+You can build a simple CLI wrapper:
+
+```bash
+python codellm.py autocomplete "def binary_search(arr, target):"
+python codellm.py creative "Write a Python LRU cache implementation"
+```
+
+---
+
+# 📂 Project Structure
 
 ```
 AutoComplete-LLm/
-├── data/                # Ignored (raw + processed data)
+│
 ├── model/
 │   ├── ai.py
-│   └── checkpoints/     # Ignored
+│   └── checkpoints/
 │
 ├── tokenizer/
-│   ├── train_tokenizer.py
-│   └── tokenizer.json
+│   ├── tokenizer.json
+│   └── train_tokenizer.py
 │
 ├── training/
 │   ├── dataset.py
 │   └── train.py
 │
 ├── inference/
-│   ├── generate.py
-│   ├── postprocess.py
 │   └── run_model.py
 │
 ├── tools/
+│   ├── hardened_clean.py
 │   ├── build_train_file.py
-│   ├── clean_repos.py
-│   ├── deduplicate.py
 │   ├── evaluate_model.py
-│   ├── inspect_dataset.py
-│   ├── model_stats.py
-│   └── plot_loss.py
+│   └── generate_alignment_pack_v3.py
 │
-├── MODEL_CARD.md
-├── README.md
-├── requirements.txt
-└── .gitignore
+├── data/
+│   ├── raw/
+│   ├── cleaned/
+│   └── processed/
+│
+└── README.md
 ```
 
 ---
 
-## 🧠 Model Configuration
+# 🎓 What This Project Demonstrates
 
-| Component       | Value                          |
-| --------------- | ------------------------------ |
-| Architecture    | GPT (Decoder-only Transformer) |
-| Layers          | 8                              |
-| Attention Heads | 8                              |
-| Embedding Size  | 512                            |
-| Context Length  | 256                            |
-| Vocabulary      | 8000 (Custom BPE)              |
-| Parameters      | 33,551,168                     |
+* Full LLM lifecycle from scratch
+* Decoder-only Transformer implementation
+* Custom causal attention
+* KV-cache integration
+* Dataset curation & alignment engineering
+* CPU-only training of 33M parameter model
+* Practical engineering for small-scale LLM systems
 
 ---
 
-## 🔬 Training Dynamics
-
-The model is trained using causal language modeling with cross-entropy loss:
-
-```
-Loss = -log(P_model(correct_token))
-```
-
-Perplexity is computed as:
-
-```
-Perplexity = exp(loss)
-```
-
-Healthy training behavior observed:
-
-* Rapid entropy collapse in early steps
-* Smooth exponential decay
-* No divergence
-* Stable convergence
-
----
-
-## ✨ Example Autocomplete
-
-**Prompt**
-
-```python
-def fibonacci(n):
-```
-
-**Model Output**
-
-```python
-a, b = 0, 1
-result = []
-for _ in range(n):
-    result.append(a)
-    a, b = b, a + b
-return result
-```
-
----
-
-## ⚙️ Installation
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## ▶️ Training
-
-```bash
-python tokenizer/train_tokenizer.py
-python training/train.py
-```
-
-Training automatically resumes from the latest checkpoint.
-
----
-
-## ▶️ Evaluation
-
-Fast evaluation (~15 minutes):
-
-```bash
-python tools/evaluate_model.py
-```
-
-Plot loss curve:
-
-```bash
-python tools/plot_loss.py
-```
-
----
-
-## ▶️ Inference
-
-```bash
-python inference/run_model.py \
-  -c model/checkpoints/latest_checkpoint.pth \
-  -p "def fibonacci(n):"
-```
-
----
-
-## 🎯 What This Project Demonstrates
-
-* Transformer internals implemented from scratch
-* Token-level autoregressive modeling
-* Efficient block-based training
-* CPU-only large model training
-* Practical ML engineering without GPUs
-* Entropy & perplexity analysis
-
----
-
-## 📜 License
+# 📜 License
 
 MIT License
+
+---
+
+# 🚀 Status
+
+This model is:
+
+* Stable
+* Usable for Python autocomplete
+* Structurally aligned
+* KV-cache enabled
+* Resume-safe trained
+
+Further scaling would require:
+
+* Larger dataset (20–50M tokens)
+* GPU acceleration
+* 60–120M parameter scale
+
+But at current scale, this is a functional local Python code LLM.
