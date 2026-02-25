@@ -1,187 +1,192 @@
-# 🧠 Python Code Autocomplete LLM (From Scratch)
+# 🧠 Python Code Autocomplete LLM
 
-A **GPT-style Transformer language model** trained **entirely from scratch** to perform **Python code autocompletion**.
-The project covers the **full LLM lifecycle**: data collection, tokenization, pretraining, algorithm fine-tuning, inference, and quantitative analysis.
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![Architecture](https://img.shields.io/badge/Architecture-GPT%20Decoder-green)
+![Parameters](https://img.shields.io/badge/Parameters-33.5M-orange)
+![Training](https://img.shields.io/badge/Training-CPU--Only-red)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
-This model was trained **locally on CPU**, without using external LLM APIs.
+A decoder-only GPT-style Transformer trained entirely from scratch for Python code autocompletion.
 
----
-
-## 🚀 Key Features
-
-* ~**60M parameter** decoder-only Transformer (GPT-style)
-* Custom **BPE tokenizer** trained on Python source code
-* Pretrained on **real GitHub repositories**
-* Fine-tuned for **algorithmic reasoning**
-* End-to-end **training, inference, and evaluation** pipeline
-* **Entropy & loss analysis** with matplotlib + Desmos
-* Fully **offline & reproducible**
+This project implements a true autoregressive decoder with KV-cache support and a fully local training pipeline.
 
 ---
 
-## 🧩 How the System Works
+# 🚀 Highlights
 
-1. **Data Collection**
-   Open-source Python repositories are cloned into `data/raw/`
-
-2. **Preprocessing**
-   `.py` files are merged into a single training corpus
-
-3. **Tokenization**
-   A Byte Pair Encoding (BPE) tokenizer learns Python-specific tokens
-
-4. **Pretraining**
-   GPT-style Transformer trained with causal language modeling
-
-5. **Algorithm Fine-Tuning**
-   Model is adapted to generate classic algorithms (search, DP, sorting)
-
-6. **Evaluation & Analysis**
-   Loss curves, entropy metrics, and single-step confidence analysis
-
-7. **Inference**
-   Model performs next-token code autocompletion
+* ✅ Custom Causal Self-Attention (No TransformerEncoder)
+* ✅ KV-cache for incremental decoding
+* ✅ Resume-safe training loop
+* ✅ Dual inference modes (Autocomplete / Creative)
+* ✅ Hardened dataset cleaning pipeline
+* ✅ CPU-only training
 
 ---
 
-## 📂 Project Structure
+# 🏗️ Architecture
 
-```
-AutoComplete-LLm/
-├── analysis/
-│   ├── entropy_single_step.py
-│   ├── plot_loss.py
-│   ├── loss_history.json
-│   └── loss_curve.png
-│
-├── data/
-│   ├── algorithms/
-│   │   └── algorithms.txt
-│   ├── processed/
-│   │   ├── train.txt
-│   │   └── train_finetune.txt
-│   └── raw/
-│       └── fastapi/
-│
-├── model/
-│   ├── ai.py
-│   └── checkpoints/
-│       ├── ckpt_e0_s50000.pth
-│       └── ckpt_algo_ft_s55000.pth
-│
-├── tokenizer/
-│   ├── train_tokenizer.py
-│   └── tokenizer.json
-│
-├── training/
-│   ├── dataset.py
-│   ├── train.py
-│   └── train_finetune.py
-│
-├── inference/
-│   └── run_model.py
-│
-├── utils/
-│   ├── build_finetune_corpus.py
-│   ├── train_from_raw.py
-│   └── generate_big_train_txt.py
-│
-├── README.md
-├── LICENSE
-├── requirements.txt
-└── .gitignore
-```
+| Component       | Value            |
+| --------------- | ---------------- |
+| Model Type      | Decoder-only GPT |
+| Layers          | 8                |
+| Attention Heads | 8                |
+| Embedding Size  | 512              |
+| Context Length  | 256              |
+| Parameters      | ~33,551,168      |
+| KV Cache        | Enabled          |
+
+This is a true causal language model — not an encoder repurposed for generation.
 
 ---
 
-## 🧠 Model Configuration
+# 📊 Performance
 
-| Component       | Value                          |
-| --------------- | ------------------------------ |
-| Architecture    | GPT (Decoder-only Transformer) |
-| Layers          | 8                              |
-| Attention Heads | 8                              |
-| Embedding Size  | 512                            |
-| Context Length  | 256                            |
-| Parameters      | ~60M                           |
-| Optimizer       | AdamW                          |
-| Loss Function   | Cross-Entropy                  |
+## Dataset
 
----
+* ~5.1M training tokens
+* ~0.5M validation tokens
+* Balanced alignment patterns
 
-## 🔬 Training Dynamics & Entropy Analysis
+## Final Metrics
 
-* Cross-entropy loss converges to **~0.25** during fine-tuning
-* Loss curve shows **stable saturation** (no divergence)
-* Single-step entropy analysis on algorithmic prompts:
+| Metric          | Value |
+| --------------- | ----- |
+| Validation Loss | 2.84  |
+| Perplexity      | 17.20 |
+| Epochs          | 2     |
 
-  * Entropy ≈ **1.10**
-  * Effective next-token vocabulary ≈ **3**
-
-This indicates **strong model confidence** during structured code generation.
+Stable convergence for a 33M parameter CPU-trained model.
 
 ---
 
-## ✨ Example Autocomplete
+# ⚡ KV-Cache Decoding
 
-**Prompt**
+Generation uses incremental decoding:
+
+1. Full prompt processed once
+2. Subsequent tokens reuse stored key/value tensors
+3. No full-sequence recomputation
+
+Result:
+
+* Faster inference
+* Lower latency
+* Proper GPT-style behavior
+
+---
+
+# ✨ Example Outputs
+
+## DFS
 
 ```python
-def fibonacci(n):
+def dfs(graph, node, visited):
 ```
-
-**Model Output**
 
 ```python
-a, b = 0, 1
-result = []
-for _ in range(n):
-    result.append(a)
-    a, b = b, a + b
-return result
+stack = [start]
+while stack:
+    node = stack.pop()
+    if node not in visited:
+        visited.add(node)
+        stack.extend(graph.get(node, []))
 ```
 
 ---
 
-## ⚙️ Installation
+## Stack
 
-```bash
-pip install -r requirements.txt
+```python
+class Stack:
+    def push(self, item):
+```
+
+```python
+self._items.append(item)
 ```
 
 ---
 
-## ▶️ Training
+## Binary Search
 
-```bash
-python utils/train_from_raw.py
-python tokenizer/train_tokenizer.py
-python training/train.py
-python training/train_finetune.py
+```python
+def binary_search(arr, target):
+```
+
+```python
+lo, hi = 0, len(arr)
+while lo < hi:
+    mid = (lo + hi) // 2
+    if arr[mid] == target:
+        return mid
+    if arr[mid] < target:
+        lo = mid + 1
+    else:
+        hi = mid
+return -1
 ```
 
 ---
 
-## ▶️ Inference
+# 🧠 Inference Modes
+
+## Autocomplete (Default)
+
+* temperature = 0.2
+* top_k = 10
+* Deterministic behavior
+
+## Creative
+
+* temperature = 0.8
+* top_k = 50
+* More diverse generation
+
+Run:
 
 ```bash
 python inference/run_model.py \
-  -c model/checkpoints/ckpt_algo_ft_s55000.pth \
-  -p "def fibonacci(n):"
+  -c model/checkpoints/latest_checkpoint.pth \
+  -p "def dfs(graph, node, visited):" \
+  --mode autocomplete
 ```
 
 ---
 
-## 🎯 What This Project Demonstrates
+# 📂 Project Structure
 
-* Deep understanding of Transformer internals
-* Token-level language modeling
-* Fine-tuning for reasoning tasks
-* Entropy-based performance analysis
-* Practical ML engineering on limited hardware
+```
+model/
+tokenizer/
+training/
+inference/
+tools/
+data/
+MODEL_CARD.md
+README.md
+```
 
 ---
 
-## 📜 License
+# 🎓 What This Project Demonstrates
+
+* Building a GPT decoder from scratch
+* Implementing causal attention manually
+* Integrating KV-cache
+* Dataset curation and alignment engineering
+* CPU-based LLM training
+
+---
+
+# 🚀 Roadmap
+
+* Scale dataset to 20M+ tokens
+* Increase parameter count
+* Expand context window
+* Add lightweight API server
+
+---
+
+# 📜 License
 
 MIT License
