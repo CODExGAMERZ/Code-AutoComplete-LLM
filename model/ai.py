@@ -29,12 +29,17 @@ class CausalSelfAttention(nn.Module):
 
         att = (q @ k.transpose(-2, -1)) / (self.head_dim ** 0.5)
 
-        mask = torch.tril(torch.ones(att.size(-2), att.size(-1), device=x.device)).bool()
+        seq_len_q = att.size(-2)
+        seq_len_k = att.size(-1)
+
+        mask = torch.tril(
+            torch.ones(seq_len_q, seq_len_k, device=x.device)
+        ).bool()
+
         att = att.masked_fill(~mask, float("-inf"))
-
         att = F.softmax(att, dim=-1)
-        out = att @ v
 
+        out = att @ v
         out = out.transpose(1, 2).contiguous().view(B, T, C)
         out = self.proj(out)
 
@@ -50,7 +55,7 @@ class Block(nn.Module):
         self.mlp = nn.Sequential(
             nn.Linear(n_embd, 4 * n_embd),
             nn.GELU(),
-            nn.Linear(4 * n_embd, n_embd)
+            nn.Linear(4 * n_embd, n_embd),
         )
 
     def forward(self, x, past_kv=None):
@@ -63,6 +68,7 @@ class Block(nn.Module):
 class GPT(nn.Module):
     def __init__(self, vocab_size, block_size, n_layers=8, n_heads=8, n_embd=512):
         super().__init__()
+
         self.token_emb = nn.Embedding(vocab_size, n_embd)
         self.pos_emb = nn.Embedding(block_size, n_embd)
 
@@ -73,11 +79,22 @@ class GPT(nn.Module):
 
         self.ln = nn.LayerNorm(n_embd)
         self.head = nn.Linear(n_embd, vocab_size)
+
         self.block_size = block_size
 
     def forward(self, x, past_kvs=None):
         B, T = x.shape
-        pos = torch.arange(0, T, device=x.device)
+
+        if past_kvs is not None:
+            past_length = past_kvs[0][0].size(2)
+        else:
+            past_length = 0
+
+        pos = torch.arange(
+            past_length,
+            past_length + T,
+            device=x.device
+        ).unsqueeze(0)
 
         x = self.token_emb(x) + self.pos_emb(pos)
 
