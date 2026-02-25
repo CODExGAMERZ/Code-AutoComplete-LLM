@@ -29,14 +29,14 @@ class CausalSelfAttention(nn.Module):
 
         att = (q @ k.transpose(-2, -1)) / (self.head_dim ** 0.5)
 
-        seq_len_q = att.size(-2)
-        seq_len_k = att.size(-1)
+        if past_kv is None:
+            T_q = att.size(-2)
+            T_k = att.size(-1)
+            mask = torch.tril(
+                torch.ones(T_q, T_k, device=x.device)
+            ).bool()
+            att = att.masked_fill(~mask, float("-inf"))
 
-        mask = torch.tril(
-            torch.ones(seq_len_q, seq_len_k, device=x.device)
-        ).bool()
-
-        att = att.masked_fill(~mask, float("-inf"))
         att = F.softmax(att, dim=-1)
 
         out = att @ v
