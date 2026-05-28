@@ -1,8 +1,11 @@
 import os
+import sys
 
 RAW_DIR = "data/raw"
 OUT_FILE = "data/processed/train.txt"
 
+# Ensure directories exist
+os.makedirs(RAW_DIR, exist_ok=True)
 os.makedirs("data/processed", exist_ok=True)
 
 def read_py_file(path):
@@ -22,7 +25,14 @@ def collect_repo_files(repo_path):
 
 all_repos_text = []
 
-for repo_name in os.listdir(RAW_DIR):
+# Check if raw directory is empty
+raw_contents = os.listdir(RAW_DIR)
+if not raw_contents:
+    print(f"⚠️  Warning: The raw data directory '{RAW_DIR}' is empty.")
+    print("Please place your target raw repository folders there for training.")
+    sys.exit(0)
+
+for repo_name in raw_contents:
     repo_path = os.path.join(RAW_DIR, repo_name)
     if not os.path.isdir(repo_path):
         continue
