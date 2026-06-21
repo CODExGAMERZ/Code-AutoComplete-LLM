@@ -47,6 +47,7 @@ tokenizer/*.cache
 *.tmp
 *.bak
 *.pth
+*.zip
 
 # =========================
 # OS files

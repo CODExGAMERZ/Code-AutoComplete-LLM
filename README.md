@@ -1,23 +1,19 @@
-# 🧠 Python Code Autocomplete LLM (From Scratch)
+# 🧠 Multilingual Code Autocomplete LLM (From Scratch)
 
-A GPT-style **decoder-only Transformer** trained entirely from scratch for Python code autocompletion.
+A GPT-style **decoder-only Transformer** trained entirely from scratch for **Python, C, and Java** code autocompletion.
 
-This project now uses a **true causal GPT decoder architecture with KV-cache support**, enabling faster incremental generation and more stable autoregressive behavior.
-
-The entire system was built and trained locally on CPU — no external LLM APIs.
+This project uses a **true causal GPT decoder architecture with KV-cache support and GPU acceleration**, enabling fast incremental generation and stable autoregressive behavior on local CPUs as well as Google Colab/Kaggle GPUs.
 
 ---
 
-# 🚀 What’s New (Decoder Upgrade)
+# 🚀 What’s New (Multilingual & GPU Upgrades)
 
-✅ Replaced TransformerEncoder with true GPT-style decoder blocks
-✅ Implemented custom Causal Self-Attention
-✅ Added KV-cache for incremental decoding
-✅ Resume-safe training (Ctrl+C supported)
-✅ Dual inference modes (Autocomplete / Creative)
-✅ Cleaned & curated training dataset pipeline
-
-This is now a proper autoregressive language model architecture.
+✅ **Python, C, and Java Support**: Expanded preprocessor, cleaner, and tokenizer to fully support `.py`, `.c`, `.h`, and `.java` files.
+✅ **Scaled Multilingual Dataset**: ~38.7M training tokens sourced from standard algorithms, CPython, Redis, and Apache Commons-Lang.
+✅ **Dynamic GPU Acceleration**: Automated CUDA (`cuda`) GPU detection for training and evaluation.
+✅ **Google Colab & Kaggle Support**: Fully configured notebooks and lightweight packaging.
+✅ **VS Code Fork Integration**: Includes architecture plan to embed this LLM inside a custom VS Code editor ([VSCODE_FORK_PLAN.md](file:///c:/Users/codex/GitHub/Code-AutoComplete-LLM/VSCODE_FORK_PLAN.md)).
+✅ **KV-cache & Causal Self-Attention**: Enabled for fast decoding.
 
 ---
 
@@ -218,7 +214,7 @@ python codellm.py creative "Write a Python LRU cache implementation"
 # 📂 Project Structure
 
 ```
-AutoComplete-LLm/
+AutoComplete-LLM/
 │
 ├── model/
 │   ├── ai.py
@@ -236,6 +232,7 @@ AutoComplete-LLm/
 │   └── run_model.py
 │
 ├── tools/
+│   ├── download_dataset.py
 │   ├── hardened_clean.py
 │   ├── build_train_file.py
 │   ├── evaluate_model.py
@@ -246,6 +243,7 @@ AutoComplete-LLm/
 │   ├── cleaned/
 │   └── processed/
 │
+├── train_on_colab.ipynb
 └── README.md
 ```
 

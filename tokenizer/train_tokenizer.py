@@ -27,7 +27,7 @@ def main():
     tokenizer.train([DATA_PATH], trainer)
 
     tokenizer.save(OUTPUT_PATH)
-    print(f"Tokenizer saved → {OUTPUT_PATH}")
+    print(f"Tokenizer saved -> {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

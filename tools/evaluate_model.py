@@ -12,7 +12,7 @@ sys.path.insert(0, ROOT_DIR)
 from model.ai import GPT
 from training.dataset import CodeDataset
 
-DEVICE = "cpu"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 CHECKPOINT_PATH = "model/checkpoints/latest_checkpoint.pth"
 
 MAX_BATCHES = 300
@@ -49,7 +49,7 @@ with torch.no_grad():
 
     for x, y in loop:
         x, y = x.to(DEVICE), y.to(DEVICE)
-        logits = model(x)
+        logits, _ = model(x)
 
         loss = criterion(
             logits.view(-1, logits.size(-1)),

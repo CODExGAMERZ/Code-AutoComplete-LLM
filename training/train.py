@@ -15,8 +15,10 @@ import argparse
 from model.ai import GPT
 from training.dataset import CodeDataset
 
-DEVICE = "cpu"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 CHECKPOINT_PATH = "model/checkpoints/latest_checkpoint.pth"
+LOGS_DIR = "training_logs"
+LOG_FILE = os.path.join(LOGS_DIR, "loss_log.csv")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -24,19 +26,21 @@ def main():
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--grad_accum", type=int, default=4)
     parser.add_argument("--lr", type=float, default=3e-4)
+    parser.add_argument("--train_path", type=str, default="data/processed/train.txt")
+    parser.add_argument("--val_path", type=str, default="data/processed/val.txt")
     args = parser.parse_args()
 
     BLOCK_SIZE = 256
     VOCAB_SIZE = 8000
 
     train_dataset = CodeDataset(
-        path="data/processed/train.txt",
+        path=args.train_path,
         tokenizer_path="tokenizer/tokenizer.json",
         block_size=BLOCK_SIZE
     )
 
     val_dataset = CodeDataset(
-        path="data/processed/val.txt",
+        path=args.val_path,
         tokenizer_path="tokenizer/tokenizer.json",
         block_size=BLOCK_SIZE
     )
@@ -56,8 +60,10 @@ def main():
     loss_fn = nn.CrossEntropyLoss()
 
     os.makedirs("model/checkpoints", exist_ok=True)
+    os.makedirs(LOGS_DIR, exist_ok=True)
 
     start_epoch = 0
+    global_step = 0
 
     if os.path.exists(CHECKPOINT_PATH):
         print("Resuming from checkpoint...")
@@ -65,6 +71,7 @@ def main():
         model.load_state_dict(ckpt["model_state"])
         optimizer.load_state_dict(ckpt["optimizer_state"])
         start_epoch = ckpt["epoch"] + 1
+        global_step = ckpt.get("global_step", start_epoch * len(train_loader))
         print(f"Resumed at epoch {start_epoch}")
 
     try:
@@ -96,6 +103,11 @@ def main():
                 total_loss += loss.item()
                 pbar.set_postfix(loss=loss.item())
 
+                # Log step loss
+                with open(LOG_FILE, "a", encoding="utf-8") as lf:
+                    lf.write(f"{global_step},{loss.item():.4f}\n")
+                global_step += 1
+
             model.eval()
             val_loss = 0
 
@@ -120,7 +132,8 @@ def main():
                 {
                     "model_state": model.state_dict(),
                     "optimizer_state": optimizer.state_dict(),
-                    "epoch": epoch
+                    "epoch": epoch,
+                    "global_step": global_step
                 },
                 CHECKPOINT_PATH
             )
@@ -131,7 +144,8 @@ def main():
             {
                 "model_state": model.state_dict(),
                 "optimizer_state": optimizer.state_dict(),
-                "epoch": epoch
+                "epoch": epoch,
+                "global_step": global_step
             },
             CHECKPOINT_PATH
         )

@@ -9,7 +9,7 @@ import argparse
 from tokenizers import Tokenizer
 from model.ai import GPT
 
-DEVICE = "cpu"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 VOCAB_SIZE = 8000
 BLOCK_SIZE = 256
 
@@ -17,7 +17,7 @@ def generate(model, tokenizer, prompt, max_tokens=120, temperature=0.2, top_k=10
     model.eval()
 
     ids = tokenizer.encode(prompt).ids
-    x = torch.tensor(ids, dtype=torch.long).unsqueeze(0)
+    x = torch.tensor(ids, dtype=torch.long).unsqueeze(0).to(DEVICE)
 
     past_kvs = None
 

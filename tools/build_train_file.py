@@ -10,9 +10,10 @@ VAL_SPLIT = 0.1
 def build():
     all_code = []
 
+    allowed_exts = (".py", ".c", ".h", ".java")
     for root, _, files in os.walk(CLEAN_DIR):
         for file in files:
-            if file.endswith(".py"):
+            if file.endswith(allowed_exts):
                 path = os.path.join(root, file)
                 with open(path, "r", encoding="utf-8", errors="ignore") as f:
                     content = f.read().strip()
@@ -25,6 +26,7 @@ def build():
     train = all_code[:split]
     val = all_code[split:]
 
+    os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)
     with open(OUTPUT, "w", encoding="utf-8") as f:
         f.write("\n\n".join(train))
 
