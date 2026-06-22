@@ -13,8 +13,8 @@ REMOVE_DIRS = {
 }
 
 MAX_FILE_SIZE = 500_000
-MAX_LINES = 1500
-MIN_LINES = 5
+MAX_LINES = 4000
+MIN_LINES = 3
 
 AUTO_GEN_PATTERNS = [
     "auto-generated",
@@ -32,7 +32,9 @@ def is_bad_file(name):
     allowed_exts = (".py", ".c", ".h", ".java")
     if not name.endswith(allowed_exts):
         return True
-    if name.startswith("test_") or name.endswith("_test.py") or name.startswith("test") or name.endswith("test.java") or name.endswith("test.c"):
+    if name.startswith("test_") or name.endswith("_test.py") or name == "tests.py":
+        return True
+    if name.endswith("test.java") and ("junit" in name or name.startswith("test")):
         return True
     return False
 

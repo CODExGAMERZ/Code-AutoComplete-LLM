@@ -28,10 +28,10 @@ def build():
 
     os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)
     with open(OUTPUT, "w", encoding="utf-8") as f:
-        f.write("\n\n".join(train))
+        f.write("".join(f"<bos>{doc}<eos>\n" for doc in train))
 
     with open(VAL_OUTPUT, "w", encoding="utf-8") as f:
-        f.write("\n\n".join(val))
+        f.write("".join(f"<bos>{doc}<eos>\n" for doc in val))
 
     print("Train + Val files built.")
 

@@ -34,6 +34,10 @@ def generate(model, tokenizer, prompt, max_tokens=120, temperature=0.2, top_k=10
             probs = torch.softmax(logits, dim=-1)
             next_token = torch.multinomial(probs, 1)
 
+            eos_id = tokenizer.token_to_id("<eos>")
+            if eos_id is not None and next_token.item() == eos_id:
+                break
+
             logits, past_kvs = model(next_token, past_kvs)
             x = torch.cat([x, next_token], dim=1)
 
